@@ -118,3 +118,56 @@ plt.ylim(-.1, 1.1)
 plt.xlabel('z')
 plt.ylabel('$\phi (z)$')
 plt.show()
+plt.close()
+
+""" Cost function for logistic regression """
+phi_z = np.arange(0.0, 1.0, 0.02)
+Jw_y0 = -np.log(1-phi_z)
+Jw_y1 = -np.log(phi_z)
+plt.plot(phi_z, Jw_y0, ls = 'dashed', label = 'J(w) if y=0')
+plt.plot(phi_z, Jw_y1, color = 'blue', label = 'J(w) if y=1')
+plt.xlabel('$\phi (z)$')
+plt.ylabel('J(w)')
+plt.legend(loc = 'upper center')
+plt.show()
+plt.close()
+
+""" Training logistic regression model and predict class """
+from sklearn.linear_model import LogisticRegression
+lr = LogisticRegression(C = 1000.0, random_state = 0)
+lr.fit(X_train_std, y_train)
+plot_decision_regions(X_combined_std, y_combined, classifier = lr, \
+    test_idx = range(len(X_train_std), len(X_combined_std)))
+plt.xlabel('petal length [standardized]')
+plt.ylabel('petal width [standardized]')
+plt.legend(loc = 'upper left')
+plt.show()
+plt.close()
+
+""" Understanding the regularization parameter C used in the LogisticRegression """
+weights, params = [], []
+for c in range(-5, 5):
+    lr = LogisticRegression(C = 10**c, random_state = 0)
+    lr.fit(X_combined_std, y_combined)
+    weights.append(lr.coef_[1]) # Attribute
+    params.append(10**c)
+weights = np.array(weights)
+plt.plot(params, weights[:,0], label = 'petal length')
+plt.plot(params, weights[:,1], label = 'petal width', ls = '--')
+plt.ylabel('Weight Coefficient')
+plt.xlabel('Regularization Parameter C')
+plt.legend(loc = 'upper left')
+plt.xscale('log')
+plt.show()
+plt.close()
+
+""" Support Vector Machine algorithm - linear classifier """
+from sklearn.svm import SVC
+svm = SVC(kernel = 'linear', C = 1.0, random_state = 0)
+svm.fit(X_combined_std, y_combined)
+plot_decision_regions(X_combined_std, y_combined, classifier = svm,\
+    test_idx = range(len(X_train_std), len(X_combined_std)))
+plt.xlabel('petal length [standardized]')
+plt.ylabel('petal width [standardized]')
+plt.legend(loc = 'upper left')
+plt.show()
