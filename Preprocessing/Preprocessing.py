@@ -127,7 +127,7 @@ lr.intercept_
 lr.coef_ # sparse solution
 # Plot the regularization path - sensitivity on the regualrization parameter C
 import matplotlib.pyplot as plt
-color = ['blue', 'green', 'gray', 'red', 'cyan', 'yellow', 'lightgreen', 'pink',\
+colors = ['blue', 'green', 'gray', 'red', 'cyan', 'yellow', 'lightgreen', 'pink',\
     'black', 'lightblue', 'orange', 'magenta', 'indigo', ]
 plt.figure()
 ax = plt.subplot(111)
@@ -135,6 +135,18 @@ reg_coef = np.arange(-4,6)
 weights, params =  [], []
 for c in reg_coef:
     lr = LogisticRegression(penalty = 'l1', C = 10**c)
-    lr.fit_transform(X_train_std, y_train)
+    lr.fit(X_train_std, y_train)
     weights.append(lr.coef_[1])
     params.append(10**c)
+weights = np.array(weights)
+for column, color in zip(range(weights.shape[1]), colors):
+    plt.plot(params, weights[:, column], label = df_wine.columns[column+1],\
+        color=color)
+plt.axhline(y = 0, linestyle = '--', linewidth = 3, color = 'k')
+plt.xlabel('C')
+plt.ylabel('Weight coefficient')
+plt.xlim([10**(-5), 10**5])
+plt.xscale('log')
+plt.legend(loc='upper left')
+ax.legend(loc='upper center', bbox_to_anchor=(1.38,1.03),ncol=1, fancybox=True)
+plt.show()
