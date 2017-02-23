@@ -100,7 +100,7 @@ print('Class label', np.unique(df_wine['Class label']))
 df_wine.head()
 # Partition of dataset
 from sklearn.cross_validation import train_test_split
-X, y = df_wine.iloc[:, 1:], df_wine[:, 0:]
+X, y = df_wine.iloc[:, 1:], df_wine.iloc[:, 0]
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, \
                             random_state = 0)
 # Bring features onto a same scale
@@ -114,3 +114,27 @@ from sklearn.preprocessing import StandardScaler
 stsc = StandardScaler()
 X_train_std = stsc.fit_transform(X_train)
 X_test_std = stsc.transform(X_test)
+
+""" reduce overfitting by feature reduction via regularization L1 """
+from sklearn.linear_model import LogisticRegression
+lr = LogisticRegression(penalty='l1', C=0.1) # C: regularization strength
+lr.fit(X_train_std, y_train)
+print('Training Accuracy: ', lr.score(X_train_std, y_train))
+print('Test Accuracy: ', lr.score(X_test_std, y_test))
+# Print to screen intercepts
+lr.intercept_
+# Print to screen (weights) coefficients
+lr.coef_ # sparse solution
+# Plot the regularization path - sensitivity on the regualrization parameter C
+import matplotlib.pyplot as plt
+color = ['blue', 'green', 'gray', 'red', 'cyan', 'yellow', 'lightgreen', 'pink',\
+    'black', 'lightblue', 'orange', 'magenta', 'indigo', ]
+plt.figure()
+ax = plt.subplot(111)
+reg_coef = np.arange(-4,6)
+weights, params =  [], []
+for c in reg_coef:
+    lr = LogisticRegression(penalty = 'l1', C = 10**c)
+    lr.fit_transform(X_train_std, y_train)
+    weights.append(lr.coef_[1])
+    params.append(10**c)
