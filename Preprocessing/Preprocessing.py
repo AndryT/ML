@@ -150,3 +150,111 @@ plt.xscale('log')
 plt.legend(loc='upper left')
 ax.legend(loc='upper center', bbox_to_anchor=(1.38,1.03),ncol=1, fancybox=True)
 plt.show()
+plt.close()
+
+""" Code for a Sequential Backward Selection (SBS) 
+algorithm for feature selection """
+from sklearn.base import clone
+from itertools import combinations
+# import numpy as np
+from sklearn.cross_validation import train_test_split
+from sklearn.metrics import accuracy_score
+
+class SBS():
+    def __init__(self, estimator, k_features, scoring = accuracy_score, \
+        test_size = 0.25, random_state = 1):
+        self.scoring = scoring
+        self.estimator = estimator
+        self.k_features = k_features
+        self.test_size = test_size
+        self.random_state = random_state
+        
+    def fit(self, X, y):
+        X_train, X_test, y_train, y_test = train_test_split(X, y, \
+            test_size = self.test_size, random_state = self.random_state)
+        
+        dim = X_train.shape[1]            
+        self.indices_ = tuple(range(dim))
+        self.subsets_ = [self.indices_]
+        score = self._calc_score(X_train, y_train, X_test, y_test,\
+            self.indices_)
+        self.scores_ = [score]
+        
+        while dim > self.k_features:
+            scores = []
+            subsets = []
+            
+            for p in combinations(self.indices_, r = dim-1): # permutations for remaining features
+                score = self._calc_score(X_train, y_train, X_test, y_test, p)
+                scores.append(score)
+                subsets.append(p)
+            
+            best = np.argmax(scores)
+            self.indices_ = subsets[best]
+            self.subsets_.append(self.indices_)
+            dim -= 1
+            self.scores_.append(scores[best])
+        self.k_score_ = self.scores_[-1]        
+        return self            
+        
+    def transform(self, X):
+        return X[:, self.indices_]
+    
+    def _calc_score(self, X_train, y_train, X_test, y_test, indices):
+        self.estimator.fit(X_train[:, indices], y_train)
+        y_pred = self.estimator.predict(X_test[:, indices])
+        score = self.scoring(y_test, y_pred)
+        return score
+        
+# Use SBS for KNN classifier
+from sklearn.neighbors import KNeighborsClassifier
+knn = KNeighborsClassifier(n_neighbors = 2)
+sbs = SBS(estimator = knn, k_features = 1)
+sbs.fit(X_train_std, y_train)
+
+k_feat = [len(k) for k in sbs.subsets_]
+plt.plot(k_feat, sbs.scores_, marker = 'o')
+plt.ylim([0.7, 1.1])
+plt.ylabel('Accuracy')
+plt.xlabel('Number of features')
+plt.grid()
+plt.show()        
+plt.close()
+# The graph shows that only 5 features are suffficient from an accuracy point of view
+k5 = list(sbs.subsets_[8])
+print(df_wine.columns[1:][k5])
+# Compare the accuracy between the knn classifier applied to the dataset including
+# all the features and the knn classifier applied to the dataset that inlcude 
+# only the 5 features detected with SBS selection feature algorithm
+knn.fit(X_train_std, y_train)
+print('Training accuracy: ', knn.score(X_train_std, y_train))
+print('Test accuracy: ', knn.score(X_test_std, y_test))
+knn.fit(X_train_std[:,k5], y_train)
+print('Training accuracy: ', knn.score(X_train_std[:, k5], y_train))
+print('Test accuracy: ', knn.score(X_test_std[:, k5], y_test))      
+
+""" Feature selection through RandomForest """
+from sklearn.ensemble import RandomForestClassifier
+feat_labels = df_wine.columns[1:]
+forest = RandomForestClassifier(n_estimators = 10000, random_state = 0, \
+    n_jobs = 1)
+forest.fit(X_train, y_train)
+importances = forest.feature_importances_
+indices = np.argsort(importances)[::-1]
+for f in range(X_train.shape[1]):
+    print("%2d) %-*s %f" % (f+1, 30, feat_labels[indices[f]], importances[indices[f]]))
+# Show this information in graphical format
+plt.title('Feature Importances')
+plt.bar(range(X_train.shape[1]), importances[indices], color = 'lightblue',\
+    align='center')
+plt.xticks(range(X_train.shape[1]), feat_labels[indices], rotation = 90)
+plt.xlim([-1, X_train.shape[1]])
+plt.tight_layout()
+plt.show()
+plt.close()
+# Selection of best 15% features
+#X_selected = forest.transform(X_train, threshold=0.15)
+from sklearn.feature_selection import SelectFromModel
+sfm = SelectFromModel(estimator = forest, threshold = 0.15, prefit = True)
+X_selected = sfm.transform(X_train)
+X_selected.shape
