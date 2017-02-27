@@ -3,6 +3,11 @@
 Created on Sun Feb 19 16:45:20 2017
 
 @author: Andrea
+
+Reference:
+"Pythoon Machine Learning"
+Author: Sebastian Raschka
+PACKT Publishing
 """
 
 """ 

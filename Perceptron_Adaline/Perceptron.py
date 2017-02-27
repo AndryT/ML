@@ -9,9 +9,9 @@ Created on Thu Feb 16 17:06:30 2017
 Database from:
 https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data
 
-Code from:
+Reference:
 "Pythoon Machine Learning"
-Foreword by Dr. Randal S. Olson
+Author: Sebastian Raschka
 PACKT Publishing
 '''
 
