@@ -120,3 +120,21 @@ plt.close()
 pca = PCA(n_components = None)
 X_train_pca = pca.fit_transform(X_train_std)
 pca.explained_variance_ratio_
+
+""" Linear Discriminant Analysis (LDA) - Supervised data compression """
+# Calculate mean vectors
+np.set_printoptions(precision=4)
+mean_vecs = []
+for label in np.unique(y_train):
+    mean_vecs.append(np.mean(X_train_std[y_train==label], axis=0))
+    print('MV %s: %s\n' %(label,mean_vecs[label-1]))
+# Calculate Within-class scatter matrix:
+d = X_train_std.shape[1]
+S_W = np.zeros((d,d))
+for label, mv in zip(np.unique(y_test), mean_vecs):
+    class_scatter = np.zeros((d,d))
+    for row in X_train[y_train == label]:
+        row, mv = row.reshape(d,1), mv.reshape(d,1)
+        class_scatter += (row-mv).dot((row-mv).T)
+    S_W += class_scatter
+print('Within-class scatter matrix: %sx%s' % (S_W.shape[0], S_W.shape[1]))
