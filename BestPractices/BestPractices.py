@@ -182,3 +182,58 @@ from sklearn.metrics import recall_score, f1_score
 print('Precision: %.3f' % precision_score(y_true=y_test, y_pred=y_pred))
 print('Recall: %.3f' % recall_score(y_true=y_test, y_pred=y_pred))
 print('F1: %.3f' % f1_score(y_true=y_test, y_pred=y_pred))
+
+# Plotting a Receiver Operating Characteristic (ROP) & Area Under the Curve (AUC)
+# Alternative: Precision-recall curve --> from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import roc_curve, auc
+from scipy import interp
+pipe_lr = Pipeline([('scl', StandardScaler()),
+                    ('pca', PCA(n_components = 2)),
+                    ('clf', LogisticRegression(penalty='l2', 
+                                               random_state=0, C=100.0))])
+X_train2 = X_train[:, [4,14]]
+cv = StratifiedKFold(y_train, n_folds =3, random_state=1)
+fig = plt.figure(figsize=(7,5))
+# Mean true positive rate (tpr) and false positive rate (fpr)
+mean_tpr = 0.0
+mean_fpr = np.linspace(0, 1, 100)
+all_tpr = []
+for i, (train, test) in enumerate(cv):
+    probas = pipe_lr.fit(X_train2[train],
+                         y_train[train]).predict_proba(X_train2[test])
+    fpr, tpr, thresholds = roc_curve(y_train[test], probas[:,1], pos_label = 1)
+    mean_tpr += interp(mean_fpr, fpr, tpr)
+    mean_tpr[0] = 0.0
+    roc_auc = auc(fpr, tpr)
+    plt.plot(fpr, tpr, lw=1, label = 'ROC fold %d (area = % 0.2f)' 
+                                % (i+1, roc_auc))
+plt.plot([0,1], [0,1], linestyle='--', color=(.6,.6,.6), 
+             label='Random guessing')
+mean_tpr /= len(cv)
+mean_tpr[-1] = 1.0
+mean_auc = auc(mean_fpr, mean_tpr)
+plt.plot(mean_fpr, mean_tpr, 'k--', label='mean ROC (area = %0.2f)' 
+    % mean_auc, lw=2)
+plt.plot([0,0,1],[0,1,1], lw=2, linestyle = ':', color='k',
+         label='Perfect performance')
+plt.xlim([-0.05, 1.05])
+plt.ylim([-0.05, 1.05])
+plt.xlabel('False positive rate')
+plt.ylabel('True positive rate')
+plt.title('Receiver Operator Characteristic')
+plt.legend(loc = 'lower right')
+plt.show()
+# Calculating the ROC-AUC score
+pipe_lr = pipe_lr.fit(X_train2, y_train)
+y_pred2 = pipe_lr.predict(X_test[:, [4,14]])
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import accuracy_score
+print('ROC AUC: %.3f' % roc_auc_score(y_true=y_test, y_score=y_pred2))
+print('Accuracy: %.3f' % accuracy_score(y_true=y_test, y_pred=y_pred2))        
+
+# Scoring metrics for multiclass classification: Micro & Macro
+# pre_scorer = make_scorer(score_func = precision_score, 
+#                            pos_label = 1,
+#                            greater_is_better - True,
+#                            average = 'micro')    
+                        
