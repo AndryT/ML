@@ -159,4 +159,26 @@ gs = GridSearchCV(estimator = DecisionTreeClassifier(random_state = 0),
                   scoring = 'accuracy',
                   cv = 5)
 scores = cross_val_score(gs, X_train, y_train, scoring = 'accuracy', cv = 2)
-print('CV accuracy: %.3f +/- %.3f' % (np.mean(scores), np.std(scores)))       
+print('CV accuracy: %.3f +/- %.3f' % (np.mean(scores), np.std(scores)))   
+
+# Confusion matrix
+from sklearn.metrics import confusion_matrix
+pipe_svc.fit(X_train, y_train)
+y_pred = pipe_svc.predict(X_test)
+confmat = confusion_matrix(y_true = y_test, y_pred=y_pred)
+print(confmat)
+# Graphical format
+fig, ax = plt.subplots(figsize=(2.5,2.5))
+ax.matshow(confmat, cmap=plt.cm.Blues, alpha=0.3)
+for i in range(confmat.shape[0]):
+    for j in range(confmat.shape[1]):
+        ax.text(x=i, y=j, s=confmat[i,j], va='center', ha='center')
+plt.xlabel('Predicted label')
+plt.ylabel('True label')
+plt.show()
+# Precision and Recall scores
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score, f1_score
+print('Precision: %.3f' % precision_score(y_true=y_test, y_pred=y_pred))
+print('Recall: %.3f' % recall_score(y_true=y_test, y_pred=y_pred))
+print('F1: %.3f' % f1_score(y_true=y_test, y_pred=y_pred))
